@@ -24,6 +24,7 @@ private:
 
     void skip_whitespace();
     void read_char();
+    char peek_char();
     Token read_alphanumeric();
     Token read_punctuator();
     Token read_number();

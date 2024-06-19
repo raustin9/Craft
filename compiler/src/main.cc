@@ -3,9 +3,10 @@
 #include "defines.h"
 #include "frontend/lexer.h"
 
-int main(void) {
+int
+main(i32 argc, char** argv) {
     // std::string input = "let x = 5;";
-    std::string input = "let variable";
+    std::string input = "define main(argc: i32, argv: Vector<String>) {let i = 1;}";
     compiler::Lexer lexer = compiler::Lexer(input);
     
     for (usize i = 0; i < input.length(); i++) {
