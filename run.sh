@@ -9,4 +9,4 @@ then
     echo "Error: $errorlevel" && exit
 fi
 
-./bin/assembly
+./bin/compiler
