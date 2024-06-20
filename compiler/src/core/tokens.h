@@ -249,10 +249,10 @@ reserved_to_str(ReservedToken token) {
             str = "==";
             break;
         case ReservedToken::OpGreaterThan:
-            str = "==";
+            str = ">";
             break;
         case ReservedToken::OpLessThan:
-            str = "==";
+            str = "<";
             break;
         case ReservedToken::OpGreaterThanEqualTo:
             str = ">=";
@@ -383,6 +383,7 @@ reserved_to_str(ReservedToken token) {
 }
 
 struct Identifier {
+    Identifier(std::string name) : name(name) {}
     std::string name;
 };
 
@@ -429,20 +430,22 @@ public:
     }
 
     void print() {
-        std::cout << "Token: ";
+        std::cout << "Token: <";
         if (this->is<ReservedToken>()) {
-            std::cout << reserved_to_str(this->get<ReservedToken>());
+            std::cout << "'" << reserved_to_str(this->get<ReservedToken>()) << "' : " << "Reserved";
         } else if (this->is<Integer>()) {
-            std::cout << this->get<Integer>();
+            std::cout << this->get<Integer>() << " : " << "Integer";
         } else if (this->is<Float>()) {
-            std::cout << this->get<Float>();
+            std::cout << this->get<Float>() << " : " << "Float";
         } else if (this->is<String>()) {
-            std::cout << this->get<String>();
-        } else if (this->is<Eof>()) {
+            std::cout << this->get<String>() << " : " << "String";
+        } else if (this->is<Identifier>()) {
+            std::cout << this->get<Identifier>().name << " : " << "Identifier";
+        }else if (this->is<Eof>()) {
             std::cout << "__EOF__";
         }
 
-        std::cout << std::endl;
+        std::cout << ">" << std::endl;
     }
 private:
     ValueType m_value;

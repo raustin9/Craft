@@ -235,7 +235,7 @@ Lexer::read_identifier() {
     } else {
         // printf("\x1b[38mIdentifier: [%s]\n\x1b[0m", str.c_str());
         return Token(
-            str
+            Identifier(str)
         );
     }
 }
@@ -429,6 +429,22 @@ Lexer::read_alphanumeric() {
     return token;
 }
 
+Token
+Lexer::read_string_literal() {
+    usize pos = m_position - 1;
+    read_char(); // eat first '"'
+    while (m_current_char != '"') {
+        read_char();
+    }
+    read_char(); // eat second '"'
+
+    char* buf = (char*)calloc(m_position-pos, sizeof(char));
+    std::strncpy(buf, m_input.data() + pos, m_position-pos-1);
+    std::string str = buf;
+
+    return Token(str);
+}
+
 /// Get the next token found from the source code
 Token Lexer::next_token() {
     Token token;
@@ -440,9 +456,13 @@ Token Lexer::next_token() {
     } else {
         if (m_current_char == '\0') {
             return Token(Eof());
+        } else if (m_current_char == '"') {
+            // printf("STRING LITERAL\n");
+            token = read_string_literal();
+        } else {
+            // printf("\x1b[36mNONALPHA: %c\n\x1b[0m", m_current_char);
+            token = read_punctuator();
         }
-        // printf("\x1b[36mNONALPHA: %c\n\x1b[0m", m_current_char);
-        token = read_punctuator();
     }
 
     token.print();

@@ -29,6 +29,7 @@ private:
     Token read_punctuator();
     Token read_number();
     Token read_identifier();
+    Token read_string_literal();
 };
 
 }
