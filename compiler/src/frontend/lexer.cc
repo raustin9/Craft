@@ -41,11 +41,12 @@ std::optional<ReservedToken> find(std::array<T, N> arr, const std::string& value
 constexpr std::array keywords {
     sort (
         std::array {
-            StringifiedToken{ "and", ReservedToken::KwAnd },
             StringifiedToken{ "as", ReservedToken::KwAs },
             StringifiedToken{ "assert", ReservedToken::KwAssert },
             StringifiedToken{ "break", ReservedToken::KwBreak },
-            StringifiedToken{ "class", ReservedToken::KwClass },
+            StringifiedToken{ "struct", ReservedToken::KwStruct },
+            StringifiedToken{ "defer", ReservedToken::KwDefer },
+            StringifiedToken{ "match", ReservedToken::KwMatch },
             StringifiedToken{ "continue", ReservedToken::KwContinue },
             StringifiedToken{ "contract", ReservedToken::KwContract },
             StringifiedToken{ "define", ReservedToken::KwDefine },
