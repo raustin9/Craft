@@ -416,7 +416,8 @@ Token Lexer::next_token() {
         token = read_alphanumeric();
     } else {
         if (m_current_char == '\0') {
-            return Token(Eof());
+            core::logger::Trace("LEXER FOUND EOF");
+            token = Token(Eof());
         } else if (m_current_char == '"') {
             token = read_string_literal();
         } else {

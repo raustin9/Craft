@@ -38,12 +38,12 @@ private:
     void expect(T expected) {
         if (m_current_token.is<ReservedToken>()) {
             if (m_current_token.get<T>() != expected) {
-                core::logger::Fatal("Parser::expect. Illegal token: {}.", m_current_token);
+                core::logger::Fatal("Parser::expect. Illegal token: {}.", m_current_token.to_str());
                 exit(1);
             }
         } else {
             if (!m_current_token.is<T>()) {
-                core::logger::Fatal("Parser::expect. Illegal token: {}.", m_current_token);
+                core::logger::Fatal("Parser::expect. Illegal token: {}.", m_current_token.to_str());
             }
         }
 

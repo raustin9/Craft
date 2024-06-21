@@ -459,17 +459,17 @@ public:
 
     std::string to_str() {
         if (this->is<ReservedToken>()) {
-            return std::vformat("Token <[{}] : ReservedToken>", std::make_format_args(reserved_to_str(this->get<ReservedToken>())));
+            return std::vformat("<[{}] : ReservedToken>", std::make_format_args(reserved_to_str(this->get<ReservedToken>())));
         } else if (this->is<Integer>()) {
-            return std::vformat("Token<[{}] : Integer>", std::make_format_args(this->get<Integer>()));
+            return std::vformat("<[{}] : Integer>", std::make_format_args(this->get<Integer>()));
         } else if (this->is<Float>()) {
-            return std::vformat("Token<[{}] : Float>", std::make_format_args(this->get<Float>()));
+            return std::vformat("<[{}] : Float>", std::make_format_args(this->get<Float>()));
         } else if (this->is<String>()) {
-            return std::vformat("Token<[{}] : String>", std::make_format_args(this->get<String>()));
+            return std::vformat("<[{}] : String>", std::make_format_args(this->get<String>()));
         } else if (this->is<Identifier>()) {
-            return std::vformat("Token<[{}] : Identifier>", std::make_format_args(this->get<Identifier>().name));
+            return std::vformat("<[{}] : Identifier>", std::make_format_args(this->get<Identifier>().name));
         }else if (this->is<Eof>()) {
-            return "Token <__EOF__>";
+            return "<__EOF__>";
         }
 
         return "Invalid Token";

@@ -2,9 +2,9 @@
 
 #include "defines.h"
 #include "tokens.h"
+#include <cstdio>
 #include <optional>
 #include <string>
-#include <memory>
 #include <vector>
 
 namespace core {
@@ -22,11 +22,28 @@ enum operator_precedence {
 
 // TODO: Add more operators
 enum class Operator : u8 {
-    PLUS = ADDSUB,
-    MINUS = ADDSUB,
-    MUL = MULDIVMOD,
-    DIV = MULDIVMOD,
-    MOD = MULDIVMOD,
+    PLUS,
+    MINUS,
+    MUL,
+    DIV,
+    MOD,
+};
+
+constexpr const char * operator_to_cstr(const Operator& op) {
+    switch (op) {
+        case Operator::PLUS: return "+";
+        case Operator::MINUS: return "+";
+        case Operator::MUL: return "+";
+        case Operator::DIV: return "+";
+        case Operator::MOD: return "+";
+    }
+}
+
+struct AstNode {
+public:
+    AstNode() noexcept = default;
+
+    virtual void print(u32 indent) {}
 };
 
 // Represents the program 
@@ -38,15 +55,19 @@ public:
         this->m_nodes.push_back(node);
     }
 
+    void print() {
+        core::logger::Trace("Program:\nNumber of Nodes: {}", m_nodes.size());
+        for (usize i = 0; i < m_nodes.size(); i++) {
+            m_nodes[i]->print(0);
+            printf("\n");
+        }
+    }
+
 private:
     // The top level nodes in a program
     std::vector<AstNode*> m_nodes;
 };
 
-struct AstNode {
-public:
-    AstNode() noexcept = default;
-};
 
 // Represents a type annotation
 // TODO: This needs to be much more complex
@@ -56,11 +77,16 @@ struct AstTypeAnnotation : public AstNode {
         {}
     
     Token type;
+
+    void print(u32 indent) override {
+        printf("%s", type.to_str().c_str());
+    }
 };
 
 /* Expressions evaluate to values */
 struct AstExpr : public AstNode {
 
+    void print(u32 indent) override {}
 };
 
 /* Represents a binary operator like x + y */
@@ -68,6 +94,14 @@ struct AstBinaryExpr : public AstExpr {
     AstBinaryExpr(AstNode* lhs, Operator op, AstNode* rhs)
         : lhs(lhs), op(op), rhs(rhs)
         {}
+    
+    void print(u32 indent) override {
+        printf("[");
+        lhs->print(0);
+        printf(" %s ", operator_to_cstr(op));
+        rhs->print(0);
+        printf("]");
+    }
     
     AstNode* lhs;
     Operator op;
@@ -80,6 +114,11 @@ struct AstPrefixExpr : public AstExpr {
         : op(op), rhs(rhs)
         {}
 
+    void print(u32 indent) override {
+        printf("[%s", operator_to_cstr(op));
+        rhs->print(0);
+    }
+
     Operator op;
     AstNode* rhs;
 };
@@ -90,6 +129,17 @@ struct AstVarDecl : public AstNode {
         type_annotation(annotation),
         value(value)
         {}
+
+    void print(u32 indent) override {
+        printf("let ");
+        target->print(0);
+        if (type_annotation.has_value()) {
+            printf(": ");
+            type_annotation.value()->print(0);
+        }
+        printf(" = ");
+        value->print(0);
+    }
    
     AstNode* target;
     std::optional<AstNode*> type_annotation;
@@ -102,6 +152,10 @@ struct AstBoolExpr : public AstExpr {
         : value(value)
         {}
 
+    void print(u32 indent) override {
+        printf("%b", value);
+    }
+
     bool value;
 };
 
@@ -110,6 +164,10 @@ struct AstIntegerExpr : public AstExpr {
     AstIntegerExpr(u64 value)
         : value(value)
         {}
+
+    void print(u32 indent) override {
+        printf("%lu", value);
+    }
 
     u64 value;
 };
@@ -120,6 +178,10 @@ struct AstFloatExpr : public AstExpr {
         : value(value)
     {}
 
+    void print(u32 indent) override {
+        printf("%lf", value);
+    }
+
     f64 value;
 };
 
@@ -128,6 +190,10 @@ struct AstIdentifierExpr : public AstExpr {
     AstIdentifierExpr(Identifier name)
         : name(name)
         {}
+
+    void print(u32 indent) override {
+        printf("%s", name.name.c_str());
+    }
     Identifier name;
 };
 

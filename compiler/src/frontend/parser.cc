@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "core/ast.h"
+#include "core/logger.h"
 #include "core/tokens.h"
 
 namespace compiler {
@@ -15,9 +16,15 @@ core::AstNode* Parser::next_node() {
     // This assumes that only "ReservedToken"s are occuring here
     core::AstNode* node;
 
+    if (m_current_token.is<Eof>()) {
+        core::logger::Info("Found EOF");
+        return nullptr;
+    }
+
     switch(m_current_token.get<ReservedToken>()) {
         case ReservedToken::KwLet:
             node = let_stmt();
+            expect(ReservedToken::OpSemicolon);
             break;
 
         default:
@@ -30,6 +37,7 @@ core::AstNode* Parser::next_node() {
 
 core::AstNode* Parser::type_annotation() {
     Token type = m_current_token;
+    advance();
     return new core::AstTypeAnnotation(type);
 }
 
@@ -42,6 +50,9 @@ core::AstNode* Parser::let_stmt() {
     expect(ReservedToken::OpColon);
 
     core::AstNode* type = type_annotation();
+
+    expect(ReservedToken::OpAssign);
+
     core::AstNode* value = expr();
 
     return new core::AstVarDecl(target, type, value);
@@ -83,6 +94,10 @@ core::AstNode* Parser::float_expr() {
     advance(); // eat the number
 
     return new core::AstFloatExpr(value);
+}
+
+core::AstNode* Parser::prefix_expr() {
+    return nullptr;
 }
 
 // Parse a primary expression
