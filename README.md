@@ -89,7 +89,7 @@ struct Person {
     }
 
     // Static method attached to the data type rather than any instance
-    static new(name: std::string, age: u32): Person {
+    static method new(name: std::string, age: u32): Person {
         return Person {
             name: name,
             age: age,
