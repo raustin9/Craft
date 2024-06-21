@@ -1,4 +1,4 @@
-CC := g++
+CC := g++-13
 CXXSPEC := c++20
 
 BUILD_DIR := bin

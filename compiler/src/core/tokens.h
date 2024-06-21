@@ -1,5 +1,6 @@
 #pragma once
 #include "defines.h"
+#include "core/logger.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -23,6 +24,7 @@ enum class ReservedToken : std::uint8_t {
     OpCurlyBracketOpen,
     OpCurlyBracketClose,
 
+    OpFatArrow,
     OpArrow,
     OpColon,
     OpDoubleColon,
@@ -75,6 +77,13 @@ enum class ReservedToken : std::uint8_t {
     KwClass,
     KwContinue,
     KwContract,
+    KwStruct,
+    KwEnum,
+    KwStatic,
+    KwMethod,
+    KwDefer,
+    KwMatch,
+    KwDefault,
     KwDefine,
     KwDel,
     KwElif,
@@ -148,6 +157,9 @@ reserved_to_str(ReservedToken token) {
             break;
         case ReservedToken::OpCurlyBracketClose:
             str = "}";
+            break;
+        case ReservedToken::OpFatArrow:
+            str = "=>";
             break;
         case ReservedToken::OpArrow:
             str = "->";
@@ -430,22 +442,37 @@ public:
     }
 
     void print() {
-        std::cout << "Token: <";
         if (this->is<ReservedToken>()) {
-            std::cout << "'" << reserved_to_str(this->get<ReservedToken>()) << "' : " << "Reserved";
+            core::logger::Debug("Token <[{}] : ReservedToken>", reserved_to_str(this->get<ReservedToken>()));
         } else if (this->is<Integer>()) {
-            std::cout << this->get<Integer>() << " : " << "Integer";
+            core::logger::Debug("Token<[{}] : Integer>", this->get<Integer>());
         } else if (this->is<Float>()) {
-            std::cout << this->get<Float>() << " : " << "Float";
+            core::logger::Debug("Token<[{}] : Float>", this->get<Float>());
         } else if (this->is<String>()) {
-            std::cout << this->get<String>() << " : " << "String";
+            core::logger::Debug("Token<[{}] : String>", this->get<String>());
         } else if (this->is<Identifier>()) {
-            std::cout << this->get<Identifier>().name << " : " << "Identifier";
+            core::logger::Debug("Token<[{}] : Identifier>", this->get<Identifier>().name);
         }else if (this->is<Eof>()) {
-            std::cout << "__EOF__";
+            core::logger::Debug("Token <__EOF__>");
+        }
+    }
+
+    std::string to_str() {
+        if (this->is<ReservedToken>()) {
+            return std::vformat("Token <[{}] : ReservedToken>", std::make_format_args(reserved_to_str(this->get<ReservedToken>())));
+        } else if (this->is<Integer>()) {
+            return std::vformat("Token<[{}] : Integer>", std::make_format_args(this->get<Integer>()));
+        } else if (this->is<Float>()) {
+            return std::vformat("Token<[{}] : Float>", std::make_format_args(this->get<Float>()));
+        } else if (this->is<String>()) {
+            return std::vformat("Token<[{}] : String>", std::make_format_args(this->get<String>()));
+        } else if (this->is<Identifier>()) {
+            return std::vformat("Token<[{}] : Identifier>", std::make_format_args(this->get<Identifier>().name));
+        }else if (this->is<Eof>()) {
+            return "Token <__EOF__>";
         }
 
-        std::cout << ">" << std::endl;
+        return "Invalid Token";
     }
 private:
     ValueType m_value;

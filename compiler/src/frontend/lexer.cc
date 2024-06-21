@@ -1,5 +1,6 @@
-#include "core/tokens.h"
 #include "defines.h"
+#include "core/tokens.h"
+#include "core/logger.h"
 #include "lexer.h"
 #include <algorithm>
 #include <cctype>
@@ -28,7 +29,6 @@ template <typename T, std::size_t N>
 std::optional<ReservedToken> find(std::array<T, N> arr, const std::string& value) {
     for (usize i = 0; i < N; i++) {
         if (arr[i].token_str == value) {
-            // printf("FOUND: [%s]\n", arr[i].token_str.data());
             return arr[i].token;
         }
     }
@@ -44,8 +44,12 @@ constexpr std::array keywords {
             StringifiedToken{ "as", ReservedToken::KwAs },
             StringifiedToken{ "assert", ReservedToken::KwAssert },
             StringifiedToken{ "break", ReservedToken::KwBreak },
+            StringifiedToken{ "method", ReservedToken::KwMethod },
+            StringifiedToken{ "static", ReservedToken::KwStatic },
             StringifiedToken{ "struct", ReservedToken::KwStruct },
+            StringifiedToken{ "enum", ReservedToken::KwEnum },
             StringifiedToken{ "defer", ReservedToken::KwDefer },
+            StringifiedToken{ "default", ReservedToken::KwDefault },
             StringifiedToken{ "match", ReservedToken::KwMatch },
             StringifiedToken{ "continue", ReservedToken::KwContinue },
             StringifiedToken{ "contract", ReservedToken::KwContract },
@@ -83,64 +87,12 @@ constexpr std::array keywords {
     )
 };
 
-/// Our operator token mappings
-constexpr std::array operators {
-    sort (
-        std::array {
-            StringifiedToken { "(", ReservedToken::OpParenOpen} ,
-            StringifiedToken { ")", ReservedToken::OpParenClose} ,
-            StringifiedToken { "[", ReservedToken::OpSubscriptOpen} ,
-            StringifiedToken { "]", ReservedToken::OpSubscriptClose} ,
-            StringifiedToken { "{", ReservedToken::OpCurlyBracketOpen} ,
-            StringifiedToken { "}", ReservedToken::OpCurlyBracketClose} ,
-            StringifiedToken { "->", ReservedToken::OpArrow} ,
-            StringifiedToken { ":", ReservedToken::OpColon} ,
-            StringifiedToken { "::", ReservedToken::OpDoubleColon} ,
-            StringifiedToken { ";", ReservedToken::OpSemicolon} ,
-            StringifiedToken { ",", ReservedToken::OpComma} ,
-            StringifiedToken { ".", ReservedToken::OpDot} ,
-            StringifiedToken { "+", ReservedToken::OpAdd} ,
-            StringifiedToken { "/", ReservedToken::OpDiv} ,
-            StringifiedToken { "%", ReservedToken::OpMod} ,
-            StringifiedToken { "*", ReservedToken::OpMul} ,
-            StringifiedToken { "-", ReservedToken::OpSub} ,
-            StringifiedToken { "&", ReservedToken::OpBinaryAnd} ,
-            StringifiedToken { "|", ReservedToken::OpBinaryOr} ,
-            StringifiedToken { "^", ReservedToken::OpBinaryXor} ,
-            StringifiedToken { "~", ReservedToken::OpBinaryNot} ,
-            StringifiedToken { "<<", ReservedToken::OpBinaryLeftShift} ,
-            StringifiedToken { ">>", ReservedToken::OpBinaryRightShift} ,
-            StringifiedToken { "&&", ReservedToken::OpLogicalAnd} ,
-            StringifiedToken { "||", ReservedToken::OpLogicalOr} ,
-            StringifiedToken { "!", ReservedToken::OpLogicalNot} ,
-            StringifiedToken { "=", ReservedToken::OpAssign} ,
-            StringifiedToken { "+=", ReservedToken::OpAssignAdd} ,
-            StringifiedToken { "-=", ReservedToken::OpAssignSub} ,
-            StringifiedToken { "/=", ReservedToken::OpAssignDiv} ,
-            StringifiedToken { "*=", ReservedToken::OpAssignMul} ,
-            StringifiedToken { "%=", ReservedToken::OpAssignMod} ,
-            StringifiedToken { "&=", ReservedToken::OpAssignBinaryAnd} ,
-            StringifiedToken { "|=", ReservedToken::OpAssignBinaryOr} ,
-            StringifiedToken { "^=", ReservedToken::OpAssignBinaryXor} ,
-            StringifiedToken { "~=", ReservedToken::OpAssignBinaryNot} ,
-            StringifiedToken { "<<=", ReservedToken::OpAssignBinaryLeftShift} ,
-            StringifiedToken { ">>=", ReservedToken::OpAssignBinaryRightShift} ,
-            StringifiedToken { "==", ReservedToken::OpEqualTo} ,
-            StringifiedToken { ">", ReservedToken::OpGreaterThan} ,
-            StringifiedToken { "<", ReservedToken::OpLessThan} ,
-            StringifiedToken { "<=", ReservedToken::OpGreaterThanEqualTo} ,
-            StringifiedToken { ">=", ReservedToken::OpLessThanEqualTo} ,
-            StringifiedToken { "!=", ReservedToken::OpNotEqual} ,
-        }
-    )
-};
 
 char
 Lexer::peek_char() {
     if (m_position+1 >= m_input.length()) {
         return '\0';
     } else {
-        // printf("\x1b[35mEating: [%c]\x1b[0m\n", m_current_char);
         return m_input[m_position+1];
     }
 }
@@ -161,7 +113,6 @@ Lexer::read_char() {
     if (m_position >= m_input.length()) {
         m_current_char = '\0';
     } else {
-        // printf("\x1b[35mEating: [%c]\x1b[0m\n", m_current_char);
         m_current_char = m_input[m_position];
     }
 
@@ -173,7 +124,6 @@ Lexer::read_number() {
     usize pos = m_position - 1;
     bool floating_point = false;
     bool is_valid = true;
-    // printf("read_number: starting position [%lu]\n", m_position);
 
     while (isdigit(m_current_char) != 0 || m_current_char == '.') {
         if (m_current_char == '.') {
@@ -185,17 +135,14 @@ Lexer::read_number() {
 
         read_char();
     }
-    // printf("read_number: ending position [%lu]\n", m_position);
 
     if (!is_valid) {
         // Not a valid number
-        // printf("INVALID TOKEN\n");
         return Token(ReservedToken::Unknown);
     } else if (floating_point) {
         // Floating point number
         f64 value;
         std::from_chars(m_input.data() + pos, m_input.data() + (m_position - pos), value);
-        // printf("\x1b[33mDecimal: %lf\n\x1b[0m", value);
         return Token(
             value
         );
@@ -203,7 +150,6 @@ Lexer::read_number() {
         // Integer number
         u64 value;
         std::from_chars(m_input.data() + pos, m_input.data() + (m_position - pos), value);
-        // printf("\x1b[31mInteger: %lu\n\x1b[0m", value);
         return Token(
             value
         );
@@ -225,16 +171,12 @@ Lexer::read_identifier() {
     std::strncpy(buf, m_input.data() + pos, m_position-pos-1);
     std::string str = buf;
 
-    // printf("STR: [%s]\n", str.c_str());
-
     auto value = find(keywords, str);
     if (value.has_value()) {
-        // printf("\x1b[38mKeyword: [%s]\n\x1b[0m", str.c_str());
         return Token(
             value.value()
         );
     } else {
-        // printf("\x1b[38mIdentifier: [%s]\n\x1b[0m", str.c_str());
         return Token(
             Identifier(str)
         );
@@ -273,15 +215,17 @@ Lexer::read_punctuator() {
                 // -=
                 read_char();
                 token = Token(ReservedToken::OpAssignSub);
+            } else {
+                token = Token(ReservedToken::OpSub);
             }
-            token = Token(ReservedToken::OpSub);
         } break;
         case ':': {
             if (peek_char() == ':') {
                 read_char();
                 token = Token(ReservedToken::OpDoubleColon);
+            } else {
+                token = Token(ReservedToken::OpColon);
             }
-            token = Token(ReservedToken::OpColon);
         } break;
         case ';': {
             token = Token(ReservedToken::OpSemicolon);
@@ -297,32 +241,36 @@ Lexer::read_punctuator() {
                 // +=
                 read_char();
                 token = Token(ReservedToken::OpAssignAdd);
+            } else {
+                token = Token(ReservedToken::OpAdd);
             }
-            token = Token(ReservedToken::OpAdd);
         } break;
         case '/': {
             if (peek_char() == '=') {
                 // /=
                 read_char();
                 token = Token(ReservedToken::OpAssignDiv);
-            } 
-            token = Token(ReservedToken::OpDiv);
+            } else {
+                token = Token(ReservedToken::OpDiv);
+            }
         } break;
         case '%': {
             if (peek_char() == '=') {
                 // %=
                 read_char();
                 token = Token(ReservedToken::OpAssignMod);
+            } else {
+                token = Token(ReservedToken::OpMod);
             }
-            token = Token(ReservedToken::OpMod);
         } break;
         case '*': {
             if (peek_char() == '=') {
                 // *=
                 read_char();
                 token = Token(ReservedToken::OpAssignMul);
+            } else {
+                token = Token(ReservedToken::OpMul);
             }
-            token = Token(ReservedToken::OpMul);
         } break;
         case '&': {
             if (peek_char() == '=') {
@@ -332,8 +280,9 @@ Lexer::read_punctuator() {
             } else if (peek_char() == '&') {
                 read_char();
                 token = Token(ReservedToken::OpLogicalAnd);
+            } else {
+                token = Token(ReservedToken::OpBinaryAnd);
             }
-            token = Token(ReservedToken::OpBinaryAnd);
         } break;
         case '|': {
             if (peek_char() == '=') {
@@ -343,22 +292,28 @@ Lexer::read_punctuator() {
             } else if (peek_char() == '|') {
                 read_char();
                 token = Token(ReservedToken::OpLogicalOr);
+            } else {
+                token = Token(ReservedToken::OpBinaryOr);
             }
-            token = Token(ReservedToken::OpBinaryOr);
         } break;
         case '^': {
             if (peek_char() == '=') {
                 read_char();
                 token = Token(ReservedToken::OpAssignBinaryXor);
+            } else {
+                token = Token(ReservedToken::OpBinaryXor);
             }
-            token = Token(ReservedToken::OpBinaryXor);
         } break;
         case '=': {
             if (peek_char() == '=') {
                 read_char();
                 token = Token(ReservedToken::OpEqualTo);
+            } else if (peek_char() == '>') {
+                read_char();
+                token = Token(ReservedToken::OpFatArrow);
+            } else {
+                token = Token(ReservedToken::OpAssign);
             }
-            token = Token(ReservedToken::OpAssign);
         } break;
         case '<': {
             if (peek_char() == '=') {
@@ -371,10 +326,12 @@ Lexer::read_punctuator() {
                     // <<=
                     read_char();
                     token = Token(ReservedToken::OpAssignBinaryLeftShift);
+                } else {
+                    token = Token(ReservedToken::OpBinaryLeftShift);
                 }
-                token = Token(ReservedToken::OpBinaryLeftShift);
+            } else {
+                token = Token(ReservedToken::OpLessThan);
             }
-            token = Token(ReservedToken::OpLessThan);
         } break;
         case '>': {
             if (peek_char() == '=') {
@@ -387,26 +344,30 @@ Lexer::read_punctuator() {
                     // >>=
                     read_char();
                     token = Token(ReservedToken::OpAssignBinaryRightShift);
+                } else {
+                    token = Token(ReservedToken::OpBinaryRightShift);
                 }
-                token = Token(ReservedToken::OpBinaryRightShift);
+            } else {
+                token = Token(ReservedToken::OpGreaterThan);
             }
-            token = Token(ReservedToken::OpGreaterThan);
         } break;
         case '~': {
             if (peek_char() == '=') {
                 // ~=
                 read_char();
                 token = Token(ReservedToken::OpAssignBinaryNot);
+            } else {
+                token = Token(ReservedToken::OpBinaryNot);
             }
-            token = Token(ReservedToken::OpBinaryNot);
         } break;
         case '!': {
             if (peek_char() == '=') {
                 // !=
                 read_char();
                 token = Token(ReservedToken::OpNotEqual);
+            } else {
+                token = Token(ReservedToken::OpLogicalNot);
             }
-            token = Token(ReservedToken::OpLogicalNot);
         } break;
 
         default:
@@ -452,16 +413,13 @@ Token Lexer::next_token() {
 
     skip_whitespace();
     if (isalnum(m_current_char)) {
-        // printf("\x1b[32mALPHANUM: %c\n\x1b[0m", m_current_char);
         token = read_alphanumeric();
     } else {
         if (m_current_char == '\0') {
             return Token(Eof());
         } else if (m_current_char == '"') {
-            // printf("STRING LITERAL\n");
             token = read_string_literal();
         } else {
-            // printf("\x1b[36mNONALPHA: %c\n\x1b[0m", m_current_char);
             token = read_punctuator();
         }
     }
