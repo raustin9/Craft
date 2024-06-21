@@ -12,12 +12,12 @@ define main(argc: i32, argv: std::Vector<std::String>): i32 {
 ```
 
 ## Syntax
-All the keywords for the language can be found in [docs/keyword.md](/docs/keywords.txt).\ 
+All the keywords for the language can be found in [docs/keyword.md](/docs/keywords.txt). \
 There are relatively few, and the main goal of that is to keep the syntax of the language relatively simple.\
 If you are familar with the [Rust](https://www.rust-lang.org) language, you will probably be familar with many constructs.
 
 ### Functions
-Functions are similar to other languages in that they take parameters as input, and return a result as output.\
+Functions are similar to other languages in that they take parameters as input, and return a result as output. \
 A function is declared and defined like below:
 ```cxx
 define func(param1_name: Param1Type, param2_name: Param2Type): FunctionReturnType {
@@ -25,7 +25,7 @@ define func(param1_name: Param1Type, param2_name: Param2Type): FunctionReturnTyp
     return result;
 }
 ```
-As seen above, we use the `define` keyword to declare the function, and we define the parameters and their types in the parentheses.\
+As seen above, we use the `define` keyword to declare the function, and we define the parameters and their types in the parentheses. \
 
 ## Data Types
 Like all languages, Craft includes primitive builtin data types.\
@@ -63,7 +63,7 @@ std::print("ptr: {*ptr}"); // prints "20" as well. NOTE we are dereferencing ptr
 ```
 
 ## Structures
-Like most languagaes, Craft allows the programmer to create custom data structurses known as `struct`s.\
+Like most languagaes, Craft allows the programmer to create custom data structurses known as `struct`s. \
 They are very similar to structures in C and Rust.\
 Unlike other languages, but like C, **ALL** fields and methods in a `struct` are public.
 ```rust
@@ -105,13 +105,13 @@ define func(): i32 {
     return std::SUCCESS;
 }
 ```
-As we can see above, we have both `method` and `static` member functions of the struct.\
-`static` functions are attached to the **type** rather than an instance. We can see that when we call `Person::new(...)`. We are calling the **type**'s method rather than an instance's.\
-On the other hand, member functions defined using the `method` keyword are attached to an instance, and as such can have access to their fields using the `self` keyword.\
-`self` is used similar to the `this` keyword in C++. We can also see that `self` is a pointer to the instance calling the object, and as such we **have to derefernce it**.\
+As we can see above, we have both `method` and `static` member functions of the struct. \
+`static` functions are attached to the **type** rather than an instance. We can see that when we call `Person::new(...)`. We are calling the **type**'s method rather than an instance's. \
+On the other hand, member functions defined using the `method` keyword are attached to an instance, and as such can have access to their fields using the `self` keyword. \
+`self` is used similar to the `this` keyword in C++. We can also see that `self` is a pointer to the instance calling the object, and as such we **have to derefernce it**. 
 
 ## Enums and Sum types
-One of the most powerful features offered by the Rust language is its usage of Sum types through their enums.\
+One of the most powerful features offered by the Rust language is its usage of Sum types through their enums. \
 Craft offers similar power in the same way. Here is a standard enum in Craft:
 ```rust
 enum Parent {
@@ -119,14 +119,14 @@ enum Parent {
     Father,
 }
 ```
-This is great, but we can do cooler things than just that
+This is great, but we can do cooler things than just that:
 ```
 enum Option<T> {
     Some(T),
     None
 }
 ```
-This is like the [Option](https://doc.rust-lang.org/std/option/) type in Rust. We can see that the `Some` variant of the enum holds a value `T`.\
+This is like the [Option](https://doc.rust-lang.org/std/option/) type in Rust. We can see that the `Some` variant of the enum holds a value `T`. \
 Here is how we would use such an `enum`:
 ```rust
 define func(input: i32): Option<i32> {
