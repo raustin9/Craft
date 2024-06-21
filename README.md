@@ -52,7 +52,7 @@ These include:
     - `*i32`: Pointer to a 32 bit integer
     - `*std::string`: Pointer to a `std::string` instance
     - Dereferencing:
-```cxx
+```rust
 let mut i: i32 = 100;
 let ptr: *i32 = &i; // assign the pointer to the address of i
 
