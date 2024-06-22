@@ -38,10 +38,12 @@ core::AstNode* Parser::next_node() {
 
 /* Parse type annotations */
 core::Type* Parser::type() {
+    core::Type* type_ptr;
     Token type_token = m_current_token;
 
     if (type_token.is<ReservedToken>()) {
         ReservedToken t  = type_token.get<ReservedToken>();
+
         switch (t) {
             case ReservedToken::KwU8:
             case ReservedToken::KwU16:
@@ -52,19 +54,22 @@ core::Type* Parser::type() {
             case ReservedToken::KwI32:
             case ReservedToken::KwI64: {
                 advance();
-                return new core::TypeInteger(t);
+                type_ptr = new core::TypeInteger(t);
+                break;
             }
             
             case ReservedToken::KwF32:
             case ReservedToken::KwF64: {
                 advance();
-                return new core::TypeFloat(t);
+                type_ptr = new core::TypeFloat(t);
+                break;
             }
 
             case ReservedToken::OpMul: {
                 expect(ReservedToken::OpMul);
                 core::Type* target = this->type();
-                return new core::TypePointer(target);
+                type_ptr = new core::TypePointer(target);
+                break;
             }
             
             default: {
@@ -72,12 +77,25 @@ core::Type* Parser::type() {
                 return nullptr;
             }
         }
-        
+
     } else if (type_token.is<Identifier>()) {
-        return new core::TypeIdentifier();
+        type_ptr = new core::TypeIdentifier();
     } else {
-        return nullptr;
+        type_ptr =  nullptr;
     }
+
+    // Parse array type
+    if (m_current_token.is<ReservedToken>() 
+        && m_current_token.get<ReservedToken>() == ReservedToken::OpSubscriptOpen
+    ) {
+        expect(ReservedToken::OpSubscriptOpen);
+        Integer length = m_current_token.get<Integer>();
+        advance();
+        expect(ReservedToken::OpSubscriptClose);
+        return new core::TypeArray(type_ptr, length);
+    }
+
+    return type_ptr;
 }
 
 // let i: i32 = 100;

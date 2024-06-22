@@ -12,6 +12,8 @@ namespace core {
 struct Type {
     virtual ~Type() = 0;
     virtual std::string to_str() = 0;
+
+    Type* arg;
 };
 
 // TODO: finish representing proceudre types
@@ -75,11 +77,13 @@ struct TypePointer : public Type {
 
 // Represents the type of an array value
 struct TypeArray : public Type {
-    ~TypeArray() override {}
     TypeArray(Type* target, i32 length)
         : target(target)
           , length(length)
         {}
+    ~TypeArray() override {
+        delete target;
+    }
     std::string to_str() override;
 
     Type* target; // The data type that this is an array of
