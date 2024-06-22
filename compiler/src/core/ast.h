@@ -141,25 +141,26 @@ struct AstPrefixExpr : public AstExpr {
  * `let name: std::string = "John";
  */
 struct AstVarDecl : public AstNode {
-    AstVarDecl(AstNode* target, std::optional<AstNode*> annotation, AstNode* value)
+    AstVarDecl(AstNode* target, std::optional<Type*> annotation, AstNode* value)
         : target(target), 
-        type_annotation(annotation),
+        type(annotation),
         value(value)
         {}
 
     void print(u32 indent) override {
         printf("let ");
         target->print(0);
-        if (type_annotation.has_value()) {
-            printf(": ");
-            type_annotation.value()->print(0);
+        if (type.has_value()) {
+            printf(": %s",
+                type.value()->to_str().c_str()
+            );
         }
         printf(" = ");
         value->print(0);
     }
    
     AstNode* target;
-    std::optional<AstNode*> type_annotation;
+    std::optional<Type*> type;
     AstNode* value;
 };
 

@@ -38,12 +38,12 @@ private:
     void expect(T expected) {
         if (m_current_token.is<ReservedToken>()) {
             if (m_current_token.get<T>() != expected) {
-                core::logger::Fatal("Parser::expect. Illegal token: {}.", m_current_token.to_str());
+                core::logger::Fatal("Parser::expect. Illegal token: {}. Expected {}", m_current_token.to_str(), reserved_to_str(expected));
                 exit(1);
             }
         } else {
             if (!m_current_token.is<T>()) {
-                core::logger::Fatal("Parser::expect. Illegal token: {}.", m_current_token.to_str());
+                core::logger::Fatal("Parser::expect. Illegal token: {}. Expected {}", m_current_token.to_str(), reserved_to_str(expected));
             }
         }
 
@@ -53,7 +53,7 @@ private:
 
     core::AstNode* let_stmt();
     core::AstNode* identifier();
-    core::AstNode* type_annotation();
+    core::Type* type();
 
     core::AstNode* expr();
     core::AstNode* primary_expr();

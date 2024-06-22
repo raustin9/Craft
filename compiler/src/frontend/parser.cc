@@ -10,6 +10,7 @@ namespace compiler {
 void Parser::advance() {
     m_current_token = m_peek_token;
     m_peek_token = m_lexer->next_token();
+    core::logger::Debug("Current {}. Peek {}", m_current_token.to_str(), m_peek_token.to_str());
 }
 
 core::AstNode* Parser::next_node() {
@@ -36,9 +37,9 @@ core::AstNode* Parser::next_node() {
     return node;
 }
 
-core::AstNode* Parser::type_annotation() {
+/* Parse type annotations */
+core::Type* Parser::type() {
     Token type_token = m_current_token;
-    core::Type* type;
 
     if (type_token.is<ReservedToken>()) {
         ReservedToken t  = type_token.get<ReservedToken>();
@@ -50,28 +51,34 @@ core::AstNode* Parser::type_annotation() {
             case ReservedToken::KwI8:
             case ReservedToken::KwI16:
             case ReservedToken::KwI32:
-            case ReservedToken::KwI64:
-                type = new core::TypeInteger(t);
-                break;
+            case ReservedToken::KwI64: {
+                advance();
+                return new core::TypeInteger(t);
+            }
             
             case ReservedToken::KwF32:
-            case ReservedToken::KwF64:
-                type = new core::TypeFloat(t);
-                break;
+            case ReservedToken::KwF64: {
+                advance();
+                return new core::TypeFloat(t);
+            }
+
+            case ReservedToken::OpMul: {
+                expect(ReservedToken::OpMul);
+                core::Type* target = this->type();
+                return new core::TypePointer(target);
+            }
             
-            default:
+            default: {
                 core::logger::Fatal("Illegal token when parsing type: {}.", reserved_to_str(type_token.get<ReservedToken>()));
                 return nullptr;
+            }
         }
+        
     } else if (type_token.is<Identifier>()) {
-        type = new core::TypeIdentifier();
+        return new core::TypeIdentifier();
     } else {
-        // TODO: Parse array and pointer types
-        type = nullptr;
+        return nullptr;
     }
-
-    advance();
-    return new core::AstTypeAnnotation(type);
 }
 
 // let i: i32 = 100;
@@ -82,7 +89,7 @@ core::AstNode* Parser::let_stmt() {
 
     expect(ReservedToken::OpColon);
 
-    core::AstNode* type = type_annotation();
+    core::Type* type = this->type();
 
     expect(ReservedToken::OpAssign);
 

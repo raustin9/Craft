@@ -425,7 +425,6 @@ Token Lexer::next_token() {
         }
     }
 
-    token.print();
     return token;
 }
 

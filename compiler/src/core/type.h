@@ -62,6 +62,9 @@ struct TypeStringLiteral : public Type {
 
 // Represents the type of a pointer value
 struct TypePointer : public Type {
+    TypePointer(Type* target)
+        : target(target)
+        {}
     ~TypePointer() override {}
     std::string to_str() override;
 
