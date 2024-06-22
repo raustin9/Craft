@@ -44,6 +44,7 @@ constexpr const char * operator_to_cstr(const Operator& op) {
 struct AstNode {
 public:
     AstNode() noexcept = default;
+    virtual ~AstNode() = 0;
 
     virtual void print(u32 indent) {}
 };
@@ -52,6 +53,13 @@ public:
 struct Program {
 public:
     Program() noexcept = default;
+    ~Program() {
+        for (usize i = 0; i < m_nodes.size(); i++) {
+            delete m_nodes[i];
+        }
+        
+        m_nodes.clear();
+    }
 
     void add_node(AstNode* node) {
         this->m_nodes.push_back(node);
@@ -78,6 +86,7 @@ struct AstTypeAnnotation : public AstNode {
         : type(type)
         {}
 
+
     // Delete the type for now.
     // This may not be owned later
     ~AstTypeAnnotation() {
@@ -93,6 +102,7 @@ struct AstTypeAnnotation : public AstNode {
 
 /* Expressions evaluate to values */
 struct AstExpr : public AstNode {
+    ~AstExpr() override {}
 
     void print(u32 indent) override {}
 };
@@ -104,6 +114,10 @@ struct AstBinaryExpr : public AstExpr {
     AstBinaryExpr(AstNode* lhs, Operator op, AstNode* rhs)
         : lhs(lhs), op(op), rhs(rhs)
         {}
+    ~AstBinaryExpr() override {
+        delete lhs;
+        delete rhs;
+    }
     
     void print(u32 indent) override {
         printf("[");
@@ -126,6 +140,9 @@ struct AstPrefixExpr : public AstExpr {
     AstPrefixExpr(Operator op, AstNode* rhs)
         : op(op), rhs(rhs)
         {}
+    ~AstPrefixExpr() override {
+        delete rhs;
+    }
 
     void print(u32 indent) override {
         printf("[%s", operator_to_cstr(op));
@@ -146,6 +163,13 @@ struct AstVarDecl : public AstNode {
         type(annotation),
         value(value)
         {}
+    ~AstVarDecl() override {
+        delete target;
+        if (type.has_value()) {
+            delete type.value();
+        }
+        delete value;
+    }
 
     void print(u32 indent) override {
         printf("let ");
@@ -169,6 +193,7 @@ struct AstBoolExpr : public AstExpr {
     AstBoolExpr(bool value)
         : value(value)
         {}
+    ~AstBoolExpr() override {}
 
     void print(u32 indent) override {
         printf("%b", value);
@@ -179,6 +204,7 @@ struct AstBoolExpr : public AstExpr {
 
 // Represents an integer literal
 struct AstIntegerExpr : public AstExpr {
+    ~AstIntegerExpr() override {}
     AstIntegerExpr(u64 value)
         : value(value)
         {}
@@ -192,6 +218,7 @@ struct AstIntegerExpr : public AstExpr {
     
 // Represents a floating point literal
 struct AstFloatExpr : public AstExpr {
+    ~AstFloatExpr() override {}
     AstFloatExpr(f64 value)
         : value(value)
     {}
@@ -205,6 +232,7 @@ struct AstFloatExpr : public AstExpr {
 
 // Represents an identifier
 struct AstIdentifierExpr : public AstExpr {
+    ~AstIdentifierExpr() override {}
     AstIdentifierExpr(Identifier name)
         : name(name)
         {}

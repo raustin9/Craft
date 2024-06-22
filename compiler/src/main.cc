@@ -13,9 +13,7 @@ main(i32 argc, char** argv) {
     compiler::core::Program program = compiler::core::Program();
     compiler::core::AstNode* node = parser.next_node();
     while (node != nullptr) {
-        if (node != nullptr) {
-            program.add_node(node);
-        }
+        program.add_node(node);
         node = parser.next_node();
     }
 

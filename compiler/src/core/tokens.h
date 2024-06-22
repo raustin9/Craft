@@ -395,6 +395,7 @@ reserved_to_str(ReservedToken token) {
 }
 
 struct Identifier {
+    ~Identifier() {}
     Identifier(std::string name) : name(name) {}
     std::string name;
 };

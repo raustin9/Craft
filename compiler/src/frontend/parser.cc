@@ -19,7 +19,6 @@ core::AstNode* Parser::next_node() {
     core::AstNode* node;
 
     if (m_current_token.is<Eof>()) {
-        core::logger::Info("Found EOF");
         return nullptr;
     }
 

@@ -65,7 +65,9 @@ struct TypePointer : public Type {
     TypePointer(Type* target)
         : target(target)
         {}
-    ~TypePointer() override {}
+    ~TypePointer() override {
+        delete target;
+    }
     std::string to_str() override;
 
     Type* target; // the type that this is a pointer to

@@ -170,6 +170,7 @@ Lexer::read_identifier() {
     char* buf = (char*)calloc(m_position-pos, sizeof(char));
     std::strncpy(buf, m_input.data() + pos, m_position-pos-1);
     std::string str = buf;
+    free(buf);
 
     auto value = find(keywords, str);
     if (value.has_value()) {
@@ -403,6 +404,7 @@ Lexer::read_string_literal() {
     char* buf = (char*)calloc(m_position-pos, sizeof(char));
     std::strncpy(buf, m_input.data() + pos, m_position-pos-1);
     std::string str = buf;
+    free(buf);
 
     return Token(str);
 }
@@ -416,7 +418,6 @@ Token Lexer::next_token() {
         token = read_alphanumeric();
     } else {
         if (m_current_char == '\0') {
-            core::logger::Trace("LEXER FOUND EOF");
             token = Token(Eof());
         } else if (m_current_char == '"') {
             token = read_string_literal();
