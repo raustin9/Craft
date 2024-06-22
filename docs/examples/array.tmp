@@ -1,0 +1,7 @@
+// The number in the brackets must be known at compile time
+let i: i32[4] = {1, 2, 3, 4}; 
+
+let string_arr: std::string[2] = {
+    "Hello,",
+    "World!",
+};

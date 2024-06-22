@@ -3,6 +3,8 @@
 #include <format>
 #include <string>
 
+namespace compiler {
+
 namespace core {
 
 namespace logger {
@@ -68,6 +70,5 @@ void Trace(const char* format, Args&& ...args) {
 }
 
 } // namespace logger
-
-
 } // namespace core
+} // namespace compiler
