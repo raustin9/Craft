@@ -1,9 +1,14 @@
 #include "type.h"
 #include "core/logger.h"
 #include "core/tokens.h"
+#include <format>
 
 namespace compiler {
 namespace core {
+
+/* Pure virtual destructor for the abstract base class */
+Type::~Type() {
+}
 
 // Constructor for the [TypeInteger] struct
 TypeInteger::TypeInteger(const ReservedToken& t) {
@@ -50,6 +55,65 @@ TypeInteger::TypeInteger(const ReservedToken& t) {
             core::logger::Error("Cannot form integer type with token {}", reserved_to_str(t));
     }
 }
+
+/* Return Integer type as a string value */
+std::string
+TypeInteger::to_str() {
+    return std::vformat(
+        "[Integer type. Size: {} bytes. Signed: {}]", 
+        std::make_format_args(size, is_signed)
+    );
+}
+
+/* Return Floating Point type as string value */
+std::string
+TypeFloat::to_str() {
+    return std::vformat(
+        "[Float type. Size: {}]", 
+        std::make_format_args(size)
+    );
+}
+
+/* Return Boolean type as string value */
+std::string
+TypeBoolean::to_str() {
+    return "[Boolean Type]";
+}
+
+/* Return StringLiteral type as string value */
+std::string
+TypeStringLiteral::to_str() {
+    return "[StringLiteral Type]";
+}
+
+/* Return Array type as string value */
+std::string
+TypeArray::to_str() {
+    return std::vformat(
+        "[Array type. Target: {}. Length: {}]", 
+        std::make_format_args(target->to_str(), length)
+    );
+}
+
+/* Return Pointer type as string value */
+std::string
+TypePointer::to_str() {
+    return std::vformat(
+        "[Pointer type. Target: {}]", 
+        std::make_format_args(target->to_str())
+    );
+}
+
+/* Return Pointer type as string value */
+std::string
+TypeIdentifier::to_str() {
+    return "[Identifier Type]";
+    /* return std::vformat( */
+    /*     "[Pointer type. Target: {}]",  */
+    /*     std::make_format_args(target->to_str()) */
+    /* ); */
+}
+
 
 // Constructor for the [TypeFloat] struct
 TypeFloat::TypeFloat(const ReservedToken& t) {

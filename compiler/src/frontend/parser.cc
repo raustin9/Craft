@@ -2,6 +2,7 @@
 #include "core/ast.h"
 #include "core/logger.h"
 #include "core/tokens.h"
+#include "core/type.h"
 
 namespace compiler {
 
@@ -36,7 +37,39 @@ core::AstNode* Parser::next_node() {
 }
 
 core::AstNode* Parser::type_annotation() {
-    Token type = m_current_token;
+    Token type_token = m_current_token;
+    core::Type* type;
+
+    if (type_token.is<ReservedToken>()) {
+        ReservedToken t  = type_token.get<ReservedToken>();
+        switch (t) {
+            case ReservedToken::KwU8:
+            case ReservedToken::KwU16:
+            case ReservedToken::KwU32:
+            case ReservedToken::KwU64:
+            case ReservedToken::KwI8:
+            case ReservedToken::KwI16:
+            case ReservedToken::KwI32:
+            case ReservedToken::KwI64:
+                type = new core::TypeInteger(t);
+                break;
+            
+            case ReservedToken::KwF32:
+            case ReservedToken::KwF64:
+                type = new core::TypeFloat(t);
+                break;
+            
+            default:
+                core::logger::Fatal("Illegal token when parsing type: {}.", reserved_to_str(type_token.get<ReservedToken>()));
+                return nullptr;
+        }
+    } else if (type_token.is<Identifier>()) {
+        type = new core::TypeIdentifier();
+    } else {
+        // TODO: Parse array and pointer types
+        type = nullptr;
+    }
+
     advance();
     return new core::AstTypeAnnotation(type);
 }

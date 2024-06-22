@@ -10,8 +10,8 @@ main(i32 argc, char** argv) {
     // std::string input = "define main(argc: i32, argv: Vector<String>) {let i = \"Hello String\";}";
     compiler::Parser parser = compiler::Parser(input);
 
-    core::Program program = core::Program();
-    core::AstNode* node = parser.next_node();
+    compiler::core::Program program = compiler::core::Program();
+    compiler::core::AstNode* node = parser.next_node();
     while (node != nullptr) {
         if (node != nullptr) {
             program.add_node(node);

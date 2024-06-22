@@ -2,13 +2,15 @@
 
 #include "defines.h"
 #include "tokens.h"
+#include "type.h"
 #include <cstdio>
 #include <optional>
 #include <string>
 #include <vector>
 
+namespace compiler {
+
 namespace core {
-using namespace compiler;
 
 // Incomplete Declarations
 struct Program;
@@ -72,14 +74,20 @@ private:
 // Represents a type annotation
 // TODO: This needs to be much more complex
 struct AstTypeAnnotation : public AstNode {
-    AstTypeAnnotation(Token type)
+    AstTypeAnnotation(Type* type)
         : type(type)
         {}
+
+    // Delete the type for now.
+    // This may not be owned later
+    ~AstTypeAnnotation() {
+        delete type;
+    }
     
-    Token type;
+    Type* type;
 
     void print(u32 indent) override {
-        printf("%s", type.to_str().c_str());
+        printf("%s", type->to_str().c_str());
     }
 };
 
@@ -89,7 +97,9 @@ struct AstExpr : public AstNode {
     void print(u32 indent) override {}
 };
 
-/* Represents a binary operator like x + y */
+/* Represents a binary operator like 
+ * `x + y` 
+ */
 struct AstBinaryExpr : public AstExpr {
     AstBinaryExpr(AstNode* lhs, Operator op, AstNode* rhs)
         : lhs(lhs), op(op), rhs(rhs)
@@ -108,7 +118,10 @@ struct AstBinaryExpr : public AstExpr {
     AstNode* rhs;
 };
 
-/* Prefix expression: '~5' or '!should_loop' etc */
+/* Prefix expression: 
+ * `~5` 
+ * `!should_loop`
+ */
 struct AstPrefixExpr : public AstExpr {
     AstPrefixExpr(Operator op, AstNode* rhs)
         : op(op), rhs(rhs)
@@ -123,6 +136,10 @@ struct AstPrefixExpr : public AstExpr {
     AstNode* rhs;
 };
 
+/* Variable declarations
+ * `let i: i32 = 100;`
+ * `let name: std::string = "John";
+ */
 struct AstVarDecl : public AstNode {
     AstVarDecl(AstNode* target, std::optional<AstNode*> annotation, AstNode* value)
         : target(target), 
@@ -198,3 +215,4 @@ struct AstIdentifierExpr : public AstExpr {
 };
 
 } // core namespace
+} // compiler namespace
