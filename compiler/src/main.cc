@@ -3,11 +3,11 @@
 #include "defines.h"
 #include "frontend/parser.h"
 #include "core/ast.h"
+#include "core/logger.h"
 
 int
 main(i32 argc, char** argv) {
     std::string input = "let x: i32[4] = 5;";
-    // std::string input = "define main(argc: i32, argv: Vector<String>) {let i = \"Hello String\";}";
     compiler::Parser parser = compiler::Parser(input);
 
     compiler::core::Program program = compiler::core::Program();
@@ -18,6 +18,7 @@ main(i32 argc, char** argv) {
     }
 
     program.print();
+    program.analyze();
 
     return EXIT_SUCCESS;
 }

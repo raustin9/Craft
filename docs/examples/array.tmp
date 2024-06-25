@@ -1,7 +1,13 @@
 // The number in the brackets must be known at compile time
+
+// Array of 4 32-bit signed integers
 let i: i32[4] = {1, 2, 3, 4}; 
 
+// Array of 2 string objects
 let string_arr: std::string[2] = {
     "Hello,",
     "World!",
 };
+
+// Set x to the first element in the array `i`
+let x: i32 = i[0];

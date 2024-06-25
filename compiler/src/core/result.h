@@ -11,7 +11,9 @@
 #include <utility>
 #include <variant>
 
-namespace result {
+namespace compiler {
+
+namespace core {
 
 template <typename T, typename E>
 class Result;
@@ -161,4 +163,5 @@ private:
     }
 };
 
-} // namespace result
+} // namespace core
+} // namespace compiler

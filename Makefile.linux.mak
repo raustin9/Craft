@@ -1,3 +1,4 @@
+# CC := clang++
 CC := g++-13
 CXXSPEC := c++20
 
@@ -6,9 +7,12 @@ TEST_DIR := tests
 OBJ_DIR := obj
 
 ASSEMBLY :=compiler# change this to the name of the assembly you want to build
-COMPILER_FLAGS := -g -Werror -Wall -std=$(CXXSPEC) -fPIC
-INCLUDE_FLAGS := -I$(ASSEMBLY)/src -I$(ASSEMBLY)
-LINKER_FLAGS :=  -shared
+COMPILER_FLAGS := -g -Wall -std=$(CXXSPEC) 
+INCLUDE_FLAGS := -I$(ASSEMBLY)/src -I$(ASSEMBLY) -I/usr/local/lib/llvm/include
+LLVM := `llvm-config --ldflags --system-libs --libs core`
+# LLVM := `llvm-config --cxxflags --ldflags --system-libs --libs core`
+# LINKER_FLAGS :=  -shared  
+LINKER_FLAGS :=  -L/usr/local/lib/llvm
 TEST_LINKER_FLAGS := -L./bin/ -l$(ASSEMBLY)
 DEFINES := -DQDEBUG -DQEXPORT
 
@@ -42,7 +46,7 @@ compile: #compile .cc files
 
 # .PHONY: bin/$(ASSEMBLY)
 bin/$(ASSEMBLY): $(OBJ_FILES)
-	@ $(CC) $(COMPILER_FLAGS) $(OBJ_FILES) -o $@ $(LDFLAGS)
+	@ $(CC) $(COMPILER_FLAGS) $(LLVM) $(OBJ_FILES) -o $@ $(LINKER_FLAGS)
 
 # TESTING
 .PHONY: bin/$(TEST_DIR)
@@ -61,4 +65,4 @@ clean: # clean build directory
 
 $(OBJ_DIR)/%.cc.o: %.cc # compile .c to .o object
 	@echo   $<...
-	$(CC) $< $(COMPILER_FLAGS) -c -o $@ $(DEFINES) $(INCLUDE_FLAGS) $(TEST_INCLUDE_FLAGS)
+	$(CC) $< $(COMPILER_FLAGS) -c -o $@ $(DEFINES) $(LLVM) $(INCLUDE_FLAGS) $(TEST_INCLUDE_FLAGS) 

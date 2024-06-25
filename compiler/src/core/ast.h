@@ -3,26 +3,41 @@
 #include "defines.h"
 #include "tokens.h"
 #include "type.h"
+#include "utils.h"
+#include "error.h"
+#include "result.h"
 #include <cstdio>
 #include <optional>
 #include <string>
 #include <vector>
 
+/* #include <llvm/ADT/APFloat.h> */
+
 namespace compiler {
 
 namespace core {
+
 
 // Incomplete Declarations
 struct Program;
 struct AstNode;
 struct AstVarDecl;
 
+/// Type alias for analyzing a result
+/// TODO: Add aliases for returning Result<>s of 
+///       AST nodes when parsing
+using AnalyzeResult = Result<AstNode*, Error>;
+
+    /// Enumeration of the precedences of the 
+/// operators. Essentially which "bind
+/// tighter"
 enum operator_precedence {
     ADDSUB,
     MULDIVMOD,
 };
 
-// TODO: Add more operators
+/// Enumeration of valid operators
+/// TODO: Finish adding the rest of the operators
 enum class Operator : u8 {
     PLUS,
     MINUS,
@@ -31,6 +46,8 @@ enum class Operator : u8 {
     MOD,
 };
 
+/// Utility function to get an operator as a string value
+/// Normally used for printing
 constexpr const char * operator_to_cstr(const Operator& op) {
     switch (op) {
         case Operator::PLUS: return "+";
@@ -39,13 +56,17 @@ constexpr const char * operator_to_cstr(const Operator& op) {
         case Operator::DIV: return "+";
         case Operator::MOD: return "+";
     }
+
+    return "__illegal_operator__";
 }
 
+/// Abstract interface class for AST Nodes
 struct AstNode {
 public:
     AstNode() noexcept = default;
     virtual ~AstNode() = 0;
 
+    virtual AnalyzeResult analyze() = 0;
     virtual void print(u32 indent) {}
 };
 
@@ -73,37 +94,24 @@ public:
         }
     }
 
+    void analyze() {
+        for (usize i = 0; i < m_nodes.size(); i++) {
+            m_nodes[i]->analyze();
+        }
+    }
+
 private:
     // The top level nodes in a program
     std::vector<AstNode*> m_nodes;
 };
 
 
-// Represents a type annotation
-// TODO: This needs to be much more complex
-struct AstTypeAnnotation : public AstNode {
-    AstTypeAnnotation(Type* type)
-        : type(type)
-        {}
-
-
-    // Delete the type for now.
-    // This may not be owned later
-    ~AstTypeAnnotation() {
-        delete type;
-    }
-    
-    Type* type;
-
-    void print(u32 indent) override {
-        printf("%s", type->to_str().c_str());
-    }
-};
-
 /* Expressions evaluate to values */
 struct AstExpr : public AstNode {
     ~AstExpr() override {}
 
+    virtual const Type* get_type() { return nullptr; };
+    AnalyzeResult analyze() override;
     void print(u32 indent) override {}
 };
 
@@ -112,13 +120,21 @@ struct AstExpr : public AstNode {
  */
 struct AstBinaryExpr : public AstExpr {
     AstBinaryExpr(AstNode* lhs, Operator op, AstNode* rhs)
-        : lhs(lhs), op(op), rhs(rhs)
+        : lhs(dynamic_cast<AstExpr*>(lhs))
+          , op(op)
+          , rhs(dynamic_cast<AstExpr*>(rhs))
+          , type(nullptr)
         {}
     ~AstBinaryExpr() override {
         delete lhs;
         delete rhs;
+        if (type) {
+            delete type;
+        }
     }
     
+    const Type* get_type() override;
+    AnalyzeResult analyze() override;
     void print(u32 indent) override {
         printf("[");
         lhs->print(0);
@@ -126,10 +142,11 @@ struct AstBinaryExpr : public AstExpr {
         rhs->print(0);
         printf("]");
     }
-    
-    AstNode* lhs;
+   
+    AstExpr* lhs;
     Operator op;
-    AstNode* rhs;
+    AstExpr* rhs;
+    Type* type;
 };
 
 /* Prefix expression: 
@@ -138,19 +155,28 @@ struct AstBinaryExpr : public AstExpr {
  */
 struct AstPrefixExpr : public AstExpr {
     AstPrefixExpr(Operator op, AstNode* rhs)
-        : op(op), rhs(rhs)
+        : op(op)
+          , rhs(dynamic_cast<AstExpr*>(rhs))
+          , type(nullptr)
         {}
     ~AstPrefixExpr() override {
         delete rhs;
+
+        if (type) {
+            delete type;
+        }
     }
 
+    const Type* get_type() override;
+    AnalyzeResult analyze() override;
     void print(u32 indent) override {
         printf("[%s", operator_to_cstr(op));
         rhs->print(0);
     }
 
     Operator op;
-    AstNode* rhs;
+    AstExpr* rhs;
+    Type* type;
 };
 
 /* Variable declarations
@@ -161,7 +187,7 @@ struct AstVarDecl : public AstNode {
     AstVarDecl(AstNode* target, std::optional<Type*> annotation, AstNode* value)
         : target(target), 
         type(annotation),
-        value(value)
+        value(dynamic_cast<AstExpr*>(value))
         {}
     ~AstVarDecl() override {
         delete target;
@@ -171,6 +197,7 @@ struct AstVarDecl : public AstNode {
         delete value;
     }
 
+    AnalyzeResult analyze() override;
     void print(u32 indent) override {
         printf("let ");
         target->print(0);
@@ -185,62 +212,94 @@ struct AstVarDecl : public AstNode {
    
     AstNode* target;
     std::optional<Type*> type;
-    AstNode* value;
+    AstExpr* value;
 };
 
 // Represents a boolean literal
 struct AstBoolExpr : public AstExpr {
     AstBoolExpr(bool value)
         : value(value)
+          , type(new TypeBoolean())
         {}
-    ~AstBoolExpr() override {}
+    ~AstBoolExpr() override {
+        if (type) {
+            delete type;
+        }
+    }
 
+    const Type* get_type() override;
+    AnalyzeResult analyze() override;
     void print(u32 indent) override {
-        printf("%b", value);
+        printf("%d", value);
     }
 
     bool value;
+    Type* type;
 };
 
 // Represents an integer literal
 struct AstIntegerExpr : public AstExpr {
-    ~AstIntegerExpr() override {}
     AstIntegerExpr(u64 value)
         : value(value)
+          , type(new TypeInteger(false, 64))
         {}
+    ~AstIntegerExpr() override {
+        if (type) {
+            delete type;
+        }
+    }
 
+    const Type* get_type() override;
+    AnalyzeResult analyze() override;
     void print(u32 indent) override {
         printf("%lu", value);
     }
 
     u64 value;
+    Type* type;
 };
     
 // Represents a floating point literal
 struct AstFloatExpr : public AstExpr {
-    ~AstFloatExpr() override {}
     AstFloatExpr(f64 value)
         : value(value)
+          , type(new TypeFloat(64))
     {}
+    ~AstFloatExpr() override {
+        if (type) {
+            delete type;
+        }
+    }
 
+    const Type* get_type() override;
+    AnalyzeResult analyze() override;
     void print(u32 indent) override {
         printf("%lf", value);
     }
 
     f64 value;
+    Type* type;
 };
 
 // Represents an identifier
 struct AstIdentifierExpr : public AstExpr {
-    ~AstIdentifierExpr() override {}
     AstIdentifierExpr(Identifier name)
         : name(name)
+          , type(new TypeIdentifier())
         {}
+    ~AstIdentifierExpr() override {
+        if (type) {
+            delete type;
+        }
+    }
 
+    const Type* get_type() override;
+    AnalyzeResult analyze() override;
     void print(u32 indent) override {
         printf("%s", name.name.c_str());
     }
     Identifier name;
+    Type* type;
 };
 
 } // core namespace

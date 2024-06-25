@@ -43,5 +43,9 @@ go-valgrind() {
     ##
 }
 
+go-run() {
+    ./bin/compiler
+}
+
 # Run the command(s)
 "go-$@"

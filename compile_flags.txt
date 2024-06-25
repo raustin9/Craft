@@ -5,3 +5,4 @@
 -Wall
 -Werror
 -xc++
+-I/usr/local/llvm/include

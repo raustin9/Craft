@@ -13,6 +13,7 @@ void Parser::advance() {
     core::logger::Debug("Current {}. Peek {}", m_current_token.to_str(), m_peek_token.to_str());
 }
 
+/* Return the next Ast Node from the source code */
 core::AstNode* Parser::next_node() {
     // Only declarations are allowed at the top level
     // This assumes that only "ReservedToken"s are occuring here
@@ -115,6 +116,7 @@ core::AstNode* Parser::let_stmt() {
     return new core::AstVarDecl(target, type, value);
 }
 
+// Parse an identifier expression
 core::AstNode* Parser::identifier() {
     Identifier ident = m_current_token.get<Identifier>();
     advance(); // eat the identifier
