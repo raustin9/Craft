@@ -58,6 +58,7 @@ private:
     core::AstNode* expr();
     core::AstNode* primary_expr();
     core::AstNode* prefix_expr();
+    core::AstNode* binary_expr(core::AstExpr* lhs, core::operator_precedence prec);
     core::AstNode* true_expr();
     core::AstNode* false_expr();
     core::AstNode* integer_expr();

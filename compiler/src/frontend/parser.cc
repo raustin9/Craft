@@ -189,4 +189,15 @@ core::AstNode* Parser::primary_expr() {
     return nullptr;
 }
 
+// Parse a binary expression
+core::AstNode* Parser::binary_expr(core::AstExpr* lhs, core::operator_precedence min_prec) {
+    Token op = m_current_token;
+
+    advance();
+
+
+
+    return nullptr;
+}
+
 }

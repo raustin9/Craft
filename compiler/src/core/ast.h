@@ -51,10 +51,10 @@ enum class Operator : u8 {
 constexpr const char * operator_to_cstr(const Operator& op) {
     switch (op) {
         case Operator::PLUS: return "+";
-        case Operator::MINUS: return "+";
-        case Operator::MUL: return "+";
-        case Operator::DIV: return "+";
-        case Operator::MOD: return "+";
+        case Operator::MINUS: return "-";
+        case Operator::MUL: return "*";
+        case Operator::DIV: return "/";
+        case Operator::MOD: return "%";
     }
 
     return "__illegal_operator__";
@@ -98,6 +98,10 @@ public:
         for (usize i = 0; i < m_nodes.size(); i++) {
             m_nodes[i]->analyze();
         }
+    }
+
+    void generate_llvm() {
+
     }
 
 private:

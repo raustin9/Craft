@@ -1,4 +1,5 @@
 #include "core/ast.h"
+#include "core/logger.h"
 #include "core/type.h"
 #include "core/utils.h"
 #include "core/result.h"
@@ -87,9 +88,32 @@ AnalyzeResult AstPrefixExpr::analyze() {
     }
 }
 
-
 AnalyzeResult AstBinaryExpr::analyze() {
-    return Err(Error(Error::Type::Semantic, "NOT DONE"));
+    AnalyzeResult rhs_res = rhs->analyze();
+    AnalyzeResult lhs_res = lhs->analyze();
+
+    if (!rhs_res.is_ok()) {
+        logger::Error("Failed to analyze rhs of BinaryExpr");
+        return Err(rhs_res.unwrap_err());
+    }
+
+    if (!lhs_res.is_ok()) {
+        logger::Error("Failed to analyze lhs of BinaryExpr");
+        return Err(lhs_res.unwrap_err());
+    }
+
+    delete rhs;
+    delete lhs;
+
+    rhs = dynamic_cast<AstExpr*>(rhs_res.unwrap());
+    lhs = dynamic_cast<AstExpr*>(lhs_res.unwrap());
+
+    /// TODO: 
+    /// Perform transformations on binary nodes here
+    /// like consolidating operations on constants
+
+    return Ok(this);
+    /* return Err(Error(Error::Type::Semantic, "NOT DONE")); */
 }
 
 }
